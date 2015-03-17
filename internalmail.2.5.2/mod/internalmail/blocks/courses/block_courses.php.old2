@@ -1,0 +1,208 @@
+<?php
+
+class block_courses extends block_list {
+
+	//funció que es crida al arrancar una instància del mòdul
+    function init() {
+        $this->title = get_string('courses');
+        $this->version = 2006032800;
+    }
+	
+	function get_content() {
+		global $USER,$CFG;
+		
+		if($this->content !== NULL) {
+            return $this->content;
+        }
+
+        $this->content = new stdClass;
+        $this->content->items = array();
+        $this->content->icons = array();
+        $this->content->footer = get_string('courses');
+		
+		$act_course=$this->instance->pageid;
+		
+		$icon  = "<img src=\"$CFG->pixpath/i/course.gif\"".
+                 " height=\"16\" width=\"16\" alt=\"".get_string("course")."\" />";
+	
+	
+	 $discussion=internalmail_get_user_discussion($USER->id);
+	 $ghost=$discussion->firstpost;
+	 $fcourse=$ghost+4;
+	 
+	 
+	 
+   $posts=get_records_sql("SELECT p.*
+   													FROM {$CFG->prefix}internalmail_posts p     
+   													WHERE p.parent='$fcourse'");
+   if(empty($posts))
+   {
+   		$posts=array();
+   }
+   foreach ($posts as $post)
+	 {	 
+	 	 
+	 $aux=preg_split('/::/',$post->subject,3);
+	 $courses[]=$aux[2];
+	 	 	
+	 }
+	 $id_int=get_record_sql("SELECT m.id
+                            FROM {$CFG->prefix}modules m
+                           WHERE m.name = 'internalmail'");
+   //curs principal
+   $module_gen=get_record("modules", "name", "internalmail");
+   $course_mod_gen=get_records("course_modules", "module", $module_gen->id);
+   if(empty($course_mod_gen)){
+   	$course_mod_gen=array();	
+   }
+  
+   foreach($course_mod_gen as $cmg){
+   
+   		if($cmg->course==1){
+   			$id_course=$cmg->id;
+   		}	
+   	
+   	
+   }
+  
+   $name=get_record_sql("SELECT c.fullname
+                            FROM {$CFG->prefix}course c
+                           WHERE c.id = '1'");
+      
+   $linkcss = $course->visible ? "" : " class=\"dimmed\" ";
+   
+   $internalmail=get_record("internalmail","course",1);
+
+	 $disc=$discussion=internalmail_get_user_discussion($USER->id);   
+	 $id_post=$disc->firstpost;
+	 $posta=array();
+   if ($id_post){
+								$posta[0] = get_record("internalmail_posts","parent",$id_post,"subject","Inbox");
+								$posta[1] = get_record("internalmail_posts","parent",$id_post,"subject","Sent");
+								$posta[2] = get_record("internalmail_posts","parent",$id_post,"subject","Deleted");
+								$posta[3] = get_record("internalmail_posts","parent",$id_post,"subject","Courses");
+								$unread = internalmail_get_folder_unread($posta[0]) + internalmail_get_folder_unread($posta[1]) + internalmail_get_folder_unread($posta[2]);
+		}
+		else{
+			$unread=" ";
+		}					
+   
+   
+   if($act_course==$internalmail->id){
+   	if($unread==0){
+   		$unread=" ";
+   	}
+   	else{
+   		$unread="(".$unread.")";
+  	}
+   	$this->content->items[]="<a $linkcss title=\"$course->shortname\" ".
+                               "href=\"view.php?id=$id_course\"><font color='#FF0000'><b>$name->fullname $unread</b></font></a>";
+   }
+   else{
+   	if($unread==0){
+   		$unread=" ";
+   	}
+   	else{
+   		$unread="(".$unread.")";
+  	}
+   	$this->content->items[]="<a $linkcss title=\"$course->shortname\" ".
+                               "href=\"view.php?id=$id_course\"><b>$name->fullname $unread</b></a>";
+   }                            
+   $this->content->icons[]=$icon;
+   //fi curs principal
+   if(empty($courses))
+   {
+   		$courses=array();
+   }				                                                                                              
+   foreach ($courses as $course) 
+   {
+    		$name=get_record_sql("SELECT c.fullname
+                            FROM {$CFG->prefix}course c
+                           WHERE c.id = '$course'");
+        /*$id_mod=get_record_sql("SELECT m.id
+                            FROM {$CFG->prefix}course_modules m
+                           WHERE m.module = '$id_int'
+                           AND   m.course= '$course'");*/
+        $internalmail=get_record("internalmail","course",$course);
+        $id_mod=get_record("course_modules","module","$id_int->id","course","$course");                           
+       
+    		
+      	//$linkcss = $course->visible ? "" : " class=\"dimmed\" ";
+      	
+      	
+      	
+      	//$id_post = internalmail_get_user_parent_id($USER->id);
+				//$post[3] = get_record("internalmail_posts","parent",$id_post->id,"subject","Courses");
+				$i=0;
+      	if ($posts = internalmail_get_child_posts($posta[3]->id)) {
+      		
+								foreach ($posts as $post) {
+									$aux=preg_split('/::/',$post->subject,3);
+									$subjbo=$aux[2];
+					
+											if(($course)==$subjbo){
+												$coursea=get_record("course","id",$course);
+												$i=internalmail_get_folder_unread($post);
+											}
+      						
+      					}	
+      	}
+      	if($act_course==$internalmail->id){
+			   	if($i==0){
+   					$i=" ";
+   				}
+   				else{
+   					$i="(".$i.")";
+  				}
+      	
+        	$this->content->items[]="<a $linkcss title=\"$course->shortname\" ".
+                               "href=\"view.php?id=$id_mod->id\"><font color='#FF0000'><b>$name->fullname $i</b></font></a>";
+        }
+        else{
+
+			   	if($i==0){
+   					$i=" ";
+   				}
+   				else{
+   					$i="(".$i.")";
+  				}
+      	         
+        	$this->content->items[]="<a $linkcss title=\"$course->shortname\" ".
+                               "href=\"view.php?id=$id_mod->id\">$name->fullname $i</a>";
+      	}
+				$this->content->icons[]=$icon;
+				
+				
+   }
+   	   
+		
+		return $this->content;
+	}
+	
+	/**
+     * This function is called on your subclass right after an instance is loaded
+     * Use this function to act on instance data just after it's loaded and before anything else is done
+     * For instance: if your block will have different title's depending on location (site, course, blog, etc)
+     */
+	 //SERVEIX PER ADAPTAR EL MÒDUL A UNA INSTÀNCIA CONCRETA (POTSER ÉS PRESCINDIBLE)
+    function specialization() {
+        // Just to make sure that this method exists.
+    }
+
+    /**
+     * Are you going to allow multiple instances of each block?
+     * If yes, then it is assumed that the block WILL USE per-instance configuration
+     * @return boolean
+     * @todo finish documenting this function by explaining per-instance configuration further
+     */
+	 //SI NO VOLS PERMETRES QUE HI HAGI MÉS D'UNA INSTÀNCIA DEL BLOC
+	 //ESBORRA AQUESTA FUNCIÓ
+    function instance_allow_multiple() {
+        // Are you going to allow multiple instances of each block?
+        // If yes, then it is assumed that the block WILL USE per-instance configuration
+        return true;
+    }
+
+}
+
+?>

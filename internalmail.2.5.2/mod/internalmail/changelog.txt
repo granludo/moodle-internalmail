@@ -1,0 +1,39 @@
+Internalmail 2.5 module for Moodle 1.6
+--------------------------------------
+
+VERSION HISTORY:
+----------------
+
+Internalmail 2.52:
+-Added the options Tab
+-Added Internalmail_Cron function, that sends a summary of unreaded mails
+-Fixed some minor bugs
+
+Internalmail 2.51:
+-Fixed some minor bugs
+
+Internalmail 2.50:
+-Compatibility with moodle 1.6
+-Fixed some minor bugs
+
+
+PROJECT HISTORY:
+----------------
+Oct 30 of 2006:
+-Carles Ferreiro and Ivan Rivero take the project.
+
+Oct 16th of 2006:
+-Continue Project Under SVN
+
+March 21th of 2006:
+-Bugfixed: Postgres works!!
+
+March 20th of 2006:
+-David Castro and Ferran Recio takes the project.
+	-add instance
+	-delete instance
+	-attachments
+	-bloc coruses
+	-bloc contacts
+
+
